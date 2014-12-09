@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link type="text/css" href="styles.css" rel="stylesheet" />
+    <link href="dist/sp-bootstrap.min.css" rel="stylesheet" media="screen">
+    <link rel="shortcut icon" href="images/favicon.png">
+    <!--
+    -->
+    <title>'Tis the season</title>
+    <!-- Custom styles for this template -->
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+
+</head>
+  <body >
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a id='brand' class="navbar-brand"
+          href="index.html"><span>'Tis the Season</span></a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <a href="https://www.spotify.com/ca/download" 
+            class="btn btn-primary navbar-btn navbar-right">Get Spotify</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div id='top' class="jumbotron jumbotron-hero">
+      <div class="container-fluid" id="jumbo-dialog">
+        <h1 id='ttitle' >'Tis the Season ...</h1>
+        <p id='ttext'>  
+            ... when artists release their Christmas albums. 
+            <br>
+            Click to see all the Christmas albums that have been 
+            released in the last two weeks.
+        </p>
+        <p><a class="btn btn-primary btn-lg" id='go' role="button">Show me the
+        Newest Christmas albums</a></p>
+      </div>
+    </div>
+    <div class="container-fluid work">
+      <div id='info' class="h1 text-center"></div>
+    </div> 
+  <div id="results-list"> </div>
+    <div id="footer">
+      <div class="container text-center">
+            <p class="atext-muted">
+                Powered by <a href="http://spotify.com">Spotify</a>.
+                Created by <a href="http://twitter.com/plamere">@plamere</a>.
+            </p>
+
+      </div>
+    </div>
+
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog"
+    aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><span
+    aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            <h2 class="modal-title" id="album-title">Modal title</h2>
+            <h3 class="modal-title pull-left" id="artist-name">Modal title</h3>
+            <h3 class="modal-title pull-right" id="release-date">Modal title</h3>
+            <br clear='both'>
+          </div>
+          <div class="modal-body align-center">
+            <img width="340px" id='album-art'> </img>
+          </div>
+          <div class="modal-footer">
+            <div class="btn-group pull-left" role="group">
+                <button class="btn btn-primary play-text glyphicon glyphicon-play" 
+                    id='play-button'> </button>
+                <button class="btn btn-primary play-text glyphicon glyphicon-forward" 
+                    id='next-button'> </button>
+            </div>
+            <a id='open-album'
+            href="spotify:user:spotify:playlist:1yHZ5C3penaxRdWR7LRIOb" 
+            type="button" class="btn btn-primary pull-right">Open in
+            Spotify</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="lib/jquery-1.11.1.min.js"></script>
+    <script src="lib/bootstrap.min.js"></script>
+    <script src="lib/underscore-min.js"></script>
+
+<script>
+"use strict";
+
+var audio = null;
+var curAlbum = null;
+
+function info(txt) {
+    $("#info").text(txt);
+}
+
+function error(txt) {
+    info(txt);
+    $("#results-list").empty();
+}
+
+function getBestAlbumArt(album, minWidth) {
+    if (album.images.length > 0) {
+        var best = album.images[0];
+        _.each(album.images, function(image) {
+            if (image.width >= minWidth) {
+                best = image;
+            }
+        });
+        return best.url;
+    } else {
+        return null;
+    }
+}
+
+function showAlbumDetails(album) {
+    var options = {};
+    curAlbum = album.details;
+    queueNextSong();
+    $("#album-title").text(album.name);
+    $("#artist-name").text(album.details.artists[0].name);
+    $("#release-date").text(album.details.release_date);
+    $("#open-album").attr('href', album.uri);
+    var img = getBestAlbumArt(album, 600);
+    $("#album-art").attr('src', img);
+    $('#myModal').modal(options)
+}
+
+function showAlbum(album) {
+    if (album.details === undefined) {
+        var url = 'https://api.spotify.com/v1/albums/' + album.id;
+        $.getJSON(url).then(
+            function(details) {
+                album.details = details;
+                details.nextTrack = 0;
+                showAlbumDetails(album);
+            },
+            function() {
+                error("The grinch stole that album");
+            }
+        );
+    } else {
+        showAlbumDetails(album);
+    }
+}
+
+function getAlbumArtDiv(album) {
+    var size = 300;
+    var url = getBestAlbumArt(album, size);
+    if (url) {
+        var img = $("<img>");
+        var title = album.name;
+        img.attr('src', url);
+        img.attr('title', title);
+        img.attr('width', 128);
+        img.attr('height', 128);
+        img.addClass('album');
+        img.on('click', function() {
+            showAlbum(album);
+        });
+        return img;
+    } else {
+        return null;
+    }
+}
+
+function showMoreAlbums(start) {
+    var url = "https://api.spotify.com/v1/search";
+    var params = {
+        q:'christmas tag:new', type:'album',
+        market:'US',
+        offset:start, limit:50
+    }
+
+    var div = $("#results-list");
+    $.getJSON(url, params).
+        then(
+            function(data) {
+                _.each(data.albums.items, function(album) {
+                    var albumArt = getAlbumArtDiv(album);
+                    if (albumArt) {
+                        div.append(albumArt);
+                    }
+                });
+                var nextStart = data.albums.offset + data.albums.items.length;
+                if (nextStart < data.albums.total) {
+                    showMoreAlbums(nextStart);
+                }
+            },
+            function() {
+                error("The grinch stole all the the albums");
+            }
+        );
+}
+
+function showAlbums() {
+    showMoreAlbums(0);
+}
+
+
+function getNextTrack() {
+    if (curAlbum) {
+        if (curAlbum.nextTrack >= curAlbum.tracks.items.length) {
+            curAlbum.nextTrack = 0;
+        }
+        return curAlbum.tracks.items[curAlbum.nextTrack++];
+    }
+}
+
+
+function playNextSong() {
+    var track = getNextTrack();
+    if (track && track.preview_url) {
+        audio.attr('src', track.preview_url);
+        audio.get(0).play();
+    }
+}
+
+function queueNextSong() {
+    var track = getNextTrack();
+    if (track && track.preview_url) {
+        audio.attr('src', track.preview_url);
+    }
+}
+
+function play() {
+    if (audio.attr('src') == undefined) {
+        playNextSong();
+    } else {
+        audio.get(0).play();
+    }
+}
+
+function cancelSong() {
+    audio.get(0).pause();
+}
+
+function pause() {
+    audio.get(0).pause();
+}
+
+function isPlaying() {
+    return !audio.get(0).paused;
+}
+
+
+
+$(document).ready(
+    function() {
+        audio = $("<audio>");
+
+        audio.get(0).addEventListener('pause', function() {
+            $("#play-button").removeClass('glyphicon-pause');
+            $("#play-button").addClass('glyphicon-play');
+        });
+
+        audio.get(0).addEventListener('playing', function() {
+            $("#play-button").addClass('glyphicon-pause');
+            $("#play-button").removeClass('glyphicon-play');
+        });
+
+        $("#go").on('click', function() {
+            showAlbums();
+        });
+
+        $("#play-button").on('click', function() {
+            if (isPlaying()) {
+                pause();
+            } else {
+                play();
+            }
+        });
+
+        $("#next-button").on('click', function() {
+            playNextSong();
+        });
+
+        $('#myModal').on('hidden.bs.modal', function () {
+            cancelSong();
+        })
+    }
+);
+
+</script>
+</body>
+</html>

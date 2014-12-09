@@ -1,0 +1,26 @@
+body {
+    background-color:#81b71a !important;
+}
+
+#results-list {
+    text-align:center;
+    margin-left:10px;
+    margin-right:10px;
+}
+.album {
+    display:inline;
+}
+
+
+#footer {
+    font-weight:lighter;
+    color:#ffffff;
+}
+
+#myModal .modal-dialog {
+    width:400px;
+}
+
+#footer a {
+    color:white;
+}
