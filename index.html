@@ -22,7 +22,7 @@
 
 </head>
   <body >
-    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="navbar navbar-default anavbar-fixed-top" role="navigation">
       <div class="container-fluid">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -45,14 +45,18 @@
     <div id='top' class="jumbotron jumbotron-hero">
       <div class="container-fluid" id="jumbo-dialog">
         <h1 id='ttitle' >'Tis the Season ...</h1>
-        <p id='ttext'>  
+        <div id='ttext-intro' >  
             ... when artists release their Christmas albums. 
             <br>
             Click to see all the Christmas albums that have been 
             released in the last two weeks.
-        </p>
-        <p><a class="btn btn-primary btn-lg" id='go' role="button">Show me the
-        Newest Christmas albums</a></p>
+            <p><a class="btn btn-primary btn-lg" id='go' role="button">
+            Show me the Newest Christmas albums</a></p>
+        </div>
+        <div id="ttext-outro">
+            Here are all the Christmas albums that have been 
+            released in the last two weeks.
+        </div>
       </div>
     </div>
     <div class="container-fluid work">
@@ -64,6 +68,7 @@
             <p class="atext-muted">
                 Powered by <a href="http://spotify.com">Spotify</a>.
                 Created by <a href="http://twitter.com/plamere">@plamere</a>.
+                Source on <a href="https://github.com/plamere/TisTheSeason">github</a>.
             </p>
 
       </div>
@@ -82,7 +87,7 @@
             <br clear='both'>
           </div>
           <div class="modal-body align-center">
-            <img width="340px" id='album-art'> </img>
+            <img width="360px" id='album-art'> </img>
           </div>
           <div class="modal-footer">
             <div class="btn-group pull-left" role="group">
@@ -267,6 +272,7 @@ function isPlaying() {
 
 $(document).ready(
     function() {
+        $("#ttext-outro").hide();
         audio = $("<audio>");
 
         audio.get(0).addEventListener('pause', function() {
@@ -280,6 +286,8 @@ $(document).ready(
         });
 
         $("#go").on('click', function() {
+            $("#ttext-intro").hide();
+            $("#ttext-outro").show();
             showAlbums();
         });
 
