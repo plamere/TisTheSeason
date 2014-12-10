@@ -114,6 +114,7 @@
 
 var audio = null;
 var curAlbum = null;
+var allAlbums = {};
 
 function info(txt) {
     $("#info").text(txt);
@@ -189,10 +190,24 @@ function getAlbumArtDiv(album) {
     }
 }
 
+var keywords = [
+        'christmas', 'holiday', 'winter', 'xmas', 
+        'santa', 'merry', 'yule', 'advent', 'noel',
+        'mistletoe', 'snow', 'season', 'wassail',
+        'tannenbaum',
+        'emmanuel', 'reindeer', 'sleigh', 'scrooge'
+];
+
+var whichKey = 0;
+var keysFound = {};
+
 function showMoreAlbums(start) {
     var url = "https://api.spotify.com/v1/search";
+    var q = 'tag:new ' + keywords[whichKey];
+
     var params = {
-        q:'christmas tag:new', type:'album',
+        q:q,
+        type:'album',
         market:'US',
         offset:start, limit:50
     }
@@ -201,15 +216,28 @@ function showMoreAlbums(start) {
     $.getJSON(url, params).
         then(
             function(data) {
+                if (start == 0) {
+                    keysFound[keywords[whichKey]] = 0;
+                }
                 _.each(data.albums.items, function(album) {
-                    var albumArt = getAlbumArtDiv(album);
-                    if (albumArt) {
-                        div.append(albumArt);
+                    if (! (album.uri in allAlbums)) {
+                        var albumArt = getAlbumArtDiv(album);
+                        if (albumArt) {
+                            div.append(albumArt);
+                        }
+                        allAlbums[album.uri] = 1;
+                        keysFound[keywords[whichKey]] += 1;
+                    } else {
                     }
                 });
                 var nextStart = data.albums.offset + data.albums.items.length;
                 if (nextStart < data.albums.total) {
                     showMoreAlbums(nextStart);
+                } else {
+                    whichKey++;
+                    if (whichKey < keywords.length) {
+                        showMoreAlbums(0);
+                    }
                 }
             },
             function() {
